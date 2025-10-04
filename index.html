@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
   <meta charset="utf-8" />
-  <title>Åpne mailto fra telefonnummer</title>
+  <title>Åpne search:query</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: Arial, sans-serif; max-width: 640px; margin: 6vh auto; padding: 16px; }
@@ -12,24 +12,24 @@
     button { padding: 10px 16px; cursor: pointer; }
     .hint { color: #555; margin-top: 6px; font-size: 14px; }
     .error { color: #b00020; margin-top: 8px; }
-    .mailto-preview { margin-top: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .uri-preview { margin-top: 12px; font-family: monospace; }
   </style>
 </head>
 <body>
-  <h1>Åpne mailto fra telefonnummer</h1>
+  <h1>Åpne search:query</h1>
 
-  <p>Skriv inn et telefonnummer (8 sifre). Det åpnes som <code>telefonnummer@test.com</code>.</p>
+  <p>Skriv inn et telefonnummer (8 sifre). Det åpnes som <code>search:query=NUMMER</code>.</p>
 
   <div class="row">
-    <label for="phone" aria-label="Telefonnummer" style="white-space:nowrap;">Telefon:</label>
-    <input id="phone" type="text" inputmode="numeric" autocomplete="off" placeholder="f.eks. 12345678" maxlength="11" />
-    <button id="openBtn" type="button">Åpne e-post</button>
+    <label for="phone">Telefon:</label>
+    <input id="phone" type="text" inputmode="numeric" maxlength="8" placeholder="f.eks. 47910303" />
+    <button id="openBtn" type="button">Åpne</button>
   </div>
-  <div class="hint">Tips: Du kan også åpne denne siden med <code>?n=12345678</code> i adressen for auto-åpning.</div>
-  <div id="error" class="error" role="alert" aria-live="polite" style="display:none;"></div>
+  <div class="hint">Tips: Legg til <code>?n=47910303</code> i adressen for auto-åpning.</div>
 
-  <div class="mailto-preview" id="preview" style="display:none;">
-    Mailto: <a id="mailtoLink" href="#">(forhåndsvisning)</a>
+  <div id="error" class="error" style="display:none;"></div>
+  <div class="uri-preview" id="preview" style="display:none;">
+    URI: <a id="uriLink" href="#">(forhåndsvisning)</a>
   </div>
 
   <script>
@@ -41,8 +41,8 @@
       return /^\d{8}$/.test(str);
     }
 
-    function buildMailto(number8) {
-      return "mailto:" + number8 + "@test.com";
+    function buildURI(number8) {
+      return "search:query=" + number8;
     }
 
     function showError(msg) {
@@ -53,9 +53,9 @@
 
     function updatePreview(number8) {
       const prev = document.getElementById("preview");
-      const link = document.getElementById("mailtoLink");
+      const link = document.getElementById("uriLink");
       if (isEightDigits(number8)) {
-        const href = buildMailto(number8);
+        const href = buildURI(number8);
         link.href = href;
         link.textContent = href;
         prev.style.display = "block";
@@ -64,28 +64,25 @@
       }
     }
 
-    function openMailto(number8) {
+    function openURI(number8) {
       if (!isEightDigits(number8)) {
         showError("Ugyldig nummer. Skriv nøyaktig 8 sifre.");
-        updatePreview(""); 
+        updatePreview("");
         return;
       }
       showError("");
-      const href = buildMailto(number8);
+      const href = buildURI(number8);
       updatePreview(number8);
-      // Forsøk å åpne mailto. Noen nettlesere kan blokkere auto-åpning.
       window.location.href = href;
     }
 
-    // UI handlers
     document.getElementById("openBtn").addEventListener("click", () => {
       const digits = onlyDigits(document.getElementById("phone").value);
-      openMailto(digits);
+      openURI(digits);
     });
 
     document.getElementById("phone").addEventListener("input", (e) => {
       const digits = onlyDigits(e.target.value);
-      // Behold kun sifre i feltet (brukervennlig rensing)
       if (e.target.value !== digits) e.target.value = digits;
       updatePreview(digits);
       showError("");
@@ -95,25 +92,9 @@
       if (e.key === "Enter") {
         e.preventDefault();
         const digits = onlyDigits(e.target.value);
-        openMailto(digits);
+        openURI(digits);
       }
     });
 
-    // Auto-åpne om ?n= eller ?num= eller ?phone= er satt
-    (function init() {
-      const params = new URLSearchParams(window.location.search);
-      const raw = params.get("n") || params.get("num") || params.get("phone") || "";
-      const digits = onlyDigits(raw);
-      if (digits) {
-        document.getElementById("phone").value = digits;
-        updatePreview(digits);
-        if (isEightDigits(digits)) {
-          // liten timeout for å la siden tegne seg før åpning
-          setTimeout(() => openMailto(digits), 150);
-        }
-      }
-      document.getElementById("phone").focus();
-    })();
-  </script>
-</body>
-</html>
+    // Auto-åpne hvis ?n= finnes
+    (functi
